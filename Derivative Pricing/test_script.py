@@ -7,12 +7,13 @@ Created on Tue Aug 14 22:03:33 2018
 
 import DataObj as DO
 import TradableObj as TO
+import OptionObj as options
 import MarketObj as MO
 import PayoffObj as PO
 import datetime
 
 io = DO.myIO()
-cny = io.read('FED/RXI_N_B_CH', 'quandl', start_date = '2017-12-31', end_date = '2018-08-09')
+cny = io.read('gs', 'morningstar', start = datetime.datetime(2018,1,1), end = None)
 market = MO.myMarket()
 market.save_data(cny, 'USD_CNY')
 
@@ -32,5 +33,5 @@ market.save_data(dividend, 'USD_CNY_DIV')
 
 USD_CNY = TO.equity('USD_CNY', market)
 P1 = PO.payoff(6.5, datetime.datetime(2018,12,31), True)
-O_UDCN = TO.European_Option('O_UDCN', USD_CNY, P1, market)
+O_UDCN = options.European_Option('O_UDCN', USD_CNY, P1, market)
 print(O_UDCN.dollar_price('2018-01-12'))

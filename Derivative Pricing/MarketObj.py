@@ -12,6 +12,19 @@ class myMarket:
     
     def save_data(self, data, ticker, over_write = False):
         if ticker not in self._db:
+            if type(data) is pd.DataFrame:
+                if type(data.index[0]) is not pd.Timestamp:
+                    new_data = data.copy()
+                    new_data.index = [pd.Timestamp(idx) for idx in data.index]
+                    data = new_data
+            elif type(data) is dict:
+                if type(next(iter(data))) is not pd.Timestamp:
+                    new_data = {}
+                    for key in data:
+                        new_data[pd.Timestamp(key)] = data[key]
+                    data = new_data
+            else:
+                raise TypeError('Data type {} is not yet supported!'.format(type(data)))
             self._db[ticker] = data
             print('Market data for {} has been added!'.format(ticker))
         else:
