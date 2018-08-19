@@ -120,3 +120,24 @@ class European_Option(option):
         d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
         #d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
         return S*np.exp(-q*dt)*ss.norm.pdf(d1)/(S*iv*np.sqrt(dt))
+    
+    def theta(self, pricing_date):
+        S, K, r, q, dt, iv = self._get_inputs(pricing_date)
+        d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
+        d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
+        if self._payoff.call:
+            return -np.exp(-q*dt)*S*ss.norm.pdf(d1)*iv/(2*np.sqrt(dt)) - \
+                    r*K*np.exp(-r*dt)*ss.norm.cdf(d2) + q*S*np.exp(-q*dt)*ss.norm.cdf(d1)
+        else:
+            return -np.exp(-q*dt)*S*ss.norm.pdf(d1)*iv/(2*np.sqrt(dt)) + \
+                    r*K*np.exp(-r*dt)*ss.norm.cdf(-d2) - q*S*np.exp(-q*dt)*ss.norm.cdf(-d1)            
+
+    def rho(self, pricing_date):
+        S, K, r, q, dt, iv = self._get_inputs(pricing_date)
+        #d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
+        d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
+        if self._payoff.call:
+            return K*dt*np.exp(-r*dt)*ss.norm.cdf(d2)
+        else:
+            return -K*dt*np.exp(-r*dt)*ss.norm.cdf(-d2)
+
