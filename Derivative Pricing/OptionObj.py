@@ -92,39 +92,32 @@ class European_Option(option):
         if pricing_date is not pd.Timestamp:
             pricing_date = pd.Timestamp(pricing_date)
         dt = (T - pricing_date)/datetime.timedelta(days = 365)
-        return S, K, r, q, dt, iv
+        d1 = (np.log(S/K) + (r-q + iv**2 /2) * dt) / (iv * np.sqrt(dt))
+        d2 = (np.log(S/K) + (r-q - iv**2 /2) * dt) / (iv * np.sqrt(dt))
+        
+        return S, K, r, q, dt, iv, d1, d2
     
     def Analytical_pricer(self, pricing_date):
-        S, K, r, q, dt, iv = self._get_inputs(pricing_date)
+        S, K, r, q, dt, iv, d1, d2 = self._get_inputs(pricing_date)
         # Pricing formula
-        d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
-        d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
         if self._payoff.call:
             return np.exp(-q*dt)*S*ss.norm.cdf(d1) - np.exp(-r*dt)*K*ss.norm.cdf(d2)
         else:
             return np.exp(-r*dt)*K*ss.norm.cdf(-d2) - np.exp(-q*dt)*S*ss.norm.cdf(-d1)
     
     def delta(self, pricing_date):
-        S, K, r, q, dt, iv = self._get_inputs(pricing_date)
-        # Pricing formula
-        d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
-        #d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
+        S, K, r, q, dt, iv, d1, d2 = self._get_inputs(pricing_date)
         if self._payoff.call:
             return np.exp(-q*dt) * ss.norm.cdf(d1)
         else:
             return -np.exp(-q*dt) * ss.norm.cdf(-d1)
         
     def gamma(self, pricing_date):
-        S, K, r, q, dt, iv = self._get_inputs(pricing_date)
-        # Pricing formula
-        d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
-        #d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
-        return S*np.exp(-q*dt)*ss.norm.pdf(d1)/(S*iv*np.sqrt(dt))
+        S, K, r, q, dt, iv, d1, d2 = self._get_inputs(pricing_date)
+        return np.exp(-q*dt)*ss.norm.pdf(d1)/(S*iv*np.sqrt(dt))
     
     def theta(self, pricing_date):
-        S, K, r, q, dt, iv = self._get_inputs(pricing_date)
-        d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
-        d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
+        S, K, r, q, dt, iv, d1, d2 = self._get_inputs(pricing_date)
         if self._payoff.call:
             return -np.exp(-q*dt)*S*ss.norm.pdf(d1)*iv/(2*np.sqrt(dt)) - \
                     r*K*np.exp(-r*dt)*ss.norm.cdf(d2) + q*S*np.exp(-q*dt)*ss.norm.cdf(d1)
@@ -133,11 +126,12 @@ class European_Option(option):
                     r*K*np.exp(-r*dt)*ss.norm.cdf(-d2) - q*S*np.exp(-q*dt)*ss.norm.cdf(-d1)            
 
     def rho(self, pricing_date):
-        S, K, r, q, dt, iv = self._get_inputs(pricing_date)
-        #d1 = (np.log(S/K) + (r-q)*dt + iv**2 * dt/2) /iv * np.sqrt(dt)
-        d2 = (np.log(S/K) + (r-q)*dt - iv**2 * dt/2) /iv * np.sqrt(dt)
+        S, K, r, q, dt, iv, d1, d2 = self._get_inputs(pricing_date)
         if self._payoff.call:
             return K*dt*np.exp(-r*dt)*ss.norm.cdf(d2)
         else:
             return -K*dt*np.exp(-r*dt)*ss.norm.cdf(-d2)
 
+    def vega(self, pricing_date):
+        S, K, r, q, dt, iv, d1, d2 = self._get_inputs(pricing_date)
+        return S*np.exp(-q*dt)*ss.norm.pdf(d1)*np.sqrt(dt)

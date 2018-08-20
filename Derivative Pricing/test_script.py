@@ -12,26 +12,32 @@ import MarketObj as MO
 import PayoffObj as PO
 import datetime
 
+# Get data from online source
 io = DO.myIO()
-cny = io.read('gs', 'morningstar', start = datetime.datetime(2018,1,1), end = None)
+data = io.read('GS', 'iex', start = datetime.datetime(2017,1,1), end = None)
 market = MO.myMarket()
-market.save_data(cny, 'USD_CNY')
+market.save_data(data[['close']], 'GS')
 
+# Get fake data for testing purpose
 ir = lambda x: 0.01
-iv = lambda x: 0.25
+iv = lambda x: 0.20
 iq = lambda x: 0.0
 interest_rate = {}
 implied_vol = {}
 dividend = {}
-for t in cny.index:
+for t in data.index:
     interest_rate[t] = ir
     implied_vol[t] = iv
     dividend[t] = iq
 market.save_data(interest_rate, 'DOM_IR')
-market.save_data(implied_vol, 'USD_CNY_IV')
-market.save_data(dividend, 'USD_CNY_DIV')
+market.save_data(implied_vol, 'GS_IV')
+market.save_data(dividend, 'GS_DIV')
 
-USD_CNY = TO.equity('USD_CNY', market)
-P1 = PO.payoff(6.5, datetime.datetime(2018,12,31), True)
-O_UDCN = options.European_Option('O_UDCN', USD_CNY, P1, market)
-print(O_UDCN.dollar_price('2018-01-12'))
+# Create securities: Stock, Option
+Stock = TO.equity('GS', market)
+P1 = PO.payoff(250, datetime.datetime(2018,8,3), True)
+Option = options.European_Option('GS_O_C', Stock, P1, market)
+
+# Price option
+assert( Option.dollar_price('2017-12-28') > 0 )
+assert( Option.dollar_price('2018-8-2') > 0 )

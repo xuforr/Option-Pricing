@@ -49,7 +49,7 @@ class myMarket:
         if ticker in self._db:
             try:
                 if type(self._db[ticker])is pd.core.frame.DataFrame:
-                    return self._db[ticker].loc[time_idx,]
+                    return self._db[ticker].loc[time_idx,].values
                 else:
                     return self._db[ticker][time_idx]
             except:
